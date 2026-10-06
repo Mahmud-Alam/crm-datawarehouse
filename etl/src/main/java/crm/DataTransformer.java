@@ -43,4 +43,26 @@ public class DataTransformer {
 
         return Integer.parseInt(cleaned);
     }
+
+    public Double cleanDecimal(String value) {
+
+        String cleaned = cleanText(value);
+
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+
+        return Double.parseDouble(cleaned);
+    }
+
+    public String cleanDate(String value) {
+
+        String cleaned = cleanText(value);
+
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+
+        return cleaned;
+    }
 }
