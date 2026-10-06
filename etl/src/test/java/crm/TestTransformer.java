@@ -20,5 +20,11 @@ public class TestTransformer {
 
                 System.out.println(
                                 transformer.cleanSector(" medical "));
+
+                System.out.println(
+                                transformer.cleanProductName("GTXPro"));
+
+                System.out.println(
+                                transformer.cleanProductName(" GTX Pro "));
         }
 }

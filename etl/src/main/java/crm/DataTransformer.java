@@ -21,4 +21,15 @@ public class DataTransformer {
 
         return value;
     }
+
+    public String cleanProductName(String product) {
+
+        String value = cleanText(product);
+
+        if (value.equalsIgnoreCase("GTXPro")) {
+            return "GTX Pro";
+        }
+
+        return value;
+    }
 }
