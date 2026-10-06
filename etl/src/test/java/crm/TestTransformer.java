@@ -26,5 +26,14 @@ public class TestTransformer {
 
                 System.out.println(
                                 transformer.cleanProductName(" GTX Pro "));
+
+                System.out.println(
+                                transformer.cleanInteger("1996"));
+
+                System.out.println(
+                                transformer.cleanInteger(" 2822 "));
+
+                System.out.println(
+                                transformer.cleanInteger(""));
         }
 }

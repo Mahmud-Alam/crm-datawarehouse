@@ -32,4 +32,15 @@ public class DataTransformer {
 
         return value;
     }
+
+    public Integer cleanInteger(String value) {
+
+        String cleaned = cleanText(value);
+
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+
+        return Integer.parseInt(cleaned);
+    }
 }
