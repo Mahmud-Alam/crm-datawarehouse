@@ -8,8 +8,7 @@ public class TestCSV {
 
         CSVParser parser = new CSVParser();
 
-        List<String[]> rows =
-                parser.readCSV("data/products.csv");
+        List<String[]> rows = parser.readCSV("data/products.csv");
 
         System.out.println("Rows loaded: " + rows.size());
 
