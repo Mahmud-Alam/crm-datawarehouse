@@ -2,6 +2,7 @@ package crm;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 
 public class TestMySQLLoader {
 
@@ -13,20 +14,45 @@ public class TestMySQLLoader {
 
             Connection connection = loader.connect();
 
-            CSVParser parser = new CSVParser();
+            CSVParser csvParser = new CSVParser();
 
-            List<String[]> products = parser.readCSV(
-                    "data/products.csv");
+            XMLParser xmlParser = new XMLParser();
+
+            DataTransformer transformer = new DataTransformer();
+
+            // Products
+            List<String[]> products = csvParser.readCSV(
+                    "D:/projects/crm-datawarehouse/data/products.csv");
 
             loader.loadProducts(connection, products);
 
+            // Accounts
+            List<Map<String, String>> accounts = xmlParser.readXML(
+                    "D:/projects/crm-datawarehouse/data/accounts.xml",
+                    "account");
+
+            loader.loadAccounts(
+                    connection,
+                    accounts,
+                    transformer);
+
+            // Sales teams
+            List<Map<String, String>> teams = xmlParser.readXML(
+                    "D:/projects/crm-datawarehouse/data/sales_teams.xml",
+                    "row");
+
+            loader.loadSalesTeams(
+                    connection,
+                    teams,
+                    transformer);
+
             connection.close();
 
-            System.out.println("Product loading test passed.");
+            System.out.println("ETL loading test passed.");
 
         } catch (Exception e) {
 
-            System.out.println("Product loading test failed.");
+            System.out.println("ETL loading test failed.");
 
             e.printStackTrace();
         }
