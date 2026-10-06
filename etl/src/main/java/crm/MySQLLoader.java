@@ -164,7 +164,8 @@ public class MySQLLoader {
     public int findAccountId(Connection connection,
             String account) throws Exception {
 
-        String sql = "SELECT account_id FROM accounts WHERE account = ?";
+        String sql = "SELECT account_id FROM accounts " +
+                "WHERE TRIM(LOWER(account)) = TRIM(LOWER(?))";
 
         PreparedStatement statement = connection.prepareStatement(sql);
 
@@ -173,6 +174,7 @@ public class MySQLLoader {
         ResultSet result = statement.executeQuery();
 
         if (result.next()) {
+
             int id = result.getInt("account_id");
 
             result.close();
@@ -212,5 +214,93 @@ public class MySQLLoader {
         statement.close();
 
         return 0;
+    }
+
+    public void loadSalesPipeline(
+            Connection connection,
+            List<String[]> pipeline,
+            DataTransformer transformer) throws Exception {
+
+        String sql = "INSERT INTO sales_pipeline " +
+                "(opportunity_id, sales_agent_id, product_id, account_id, " +
+                "deal_stage, engage_date, close_date, close_value) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        PreparedStatement statement = connection.prepareStatement(sql);
+
+        for (String[] row : pipeline) {
+
+            String opportunityId = transformer.cleanText(row[0]);
+            String salesAgent = transformer.cleanText(row[1]);
+            String product = transformer.cleanProductName(row[2]);
+            String account = transformer.cleanText(row[3]);
+            String dealStage = transformer.cleanText(row[4]);
+            String engageDate = transformer.cleanDate(row[5]);
+            String closeDate = transformer.cleanDate(row[6]);
+            Double closeValue = transformer.cleanDecimal(row[7]);
+
+            int salesAgentId = findSalesAgentId(connection, salesAgent);
+
+            int productId = findProductId(connection, product);
+
+            int accountId = findAccountId(connection, account);
+
+            if (salesAgentId == 0) {
+                System.out.println(
+                        "Sales agent not found: " + salesAgent);
+                continue;
+            }
+
+            if (productId == 0) {
+                System.out.println(
+                        "Product not found: " + product);
+                continue;
+            }
+
+            if (accountId == 0 && !account.isEmpty()) {
+                System.out.println(
+                        "Account not found: " + account);
+                continue;
+            }
+
+            statement.setString(1, opportunityId);
+            statement.setInt(2, salesAgentId);
+            statement.setInt(3, productId);
+            if (accountId == 0) {
+                statement.setObject(4, null);
+            } else {
+                statement.setInt(4, accountId);
+            }
+            statement.setString(5, dealStage);
+
+            if (engageDate == null) {
+                statement.setObject(6, null);
+            } else {
+                statement.setDate(
+                        6,
+                        java.sql.Date.valueOf(engageDate));
+            }
+
+            if (closeDate == null) {
+                statement.setObject(7, null);
+            } else {
+                statement.setDate(
+                        7,
+                        java.sql.Date.valueOf(closeDate));
+            }
+
+            if (closeValue == null) {
+                statement.setObject(8, null);
+            } else {
+                statement.setDouble(8, closeValue);
+            }
+
+            statement.executeUpdate();
+        }
+
+        statement.close();
+
+        System.out.println(
+                "Sales pipeline loaded: " + pipeline.size());
     }
 }

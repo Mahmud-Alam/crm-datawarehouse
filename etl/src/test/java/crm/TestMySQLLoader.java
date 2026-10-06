@@ -46,6 +46,14 @@ public class TestMySQLLoader {
                     teams,
                     transformer);
 
+            List<String[]> pipeline = csvParser.readCSV(
+                    "D:/projects/crm-datawarehouse/data/sales_pipeline.csv");
+
+            loader.loadSalesPipeline(
+                    connection,
+                    pipeline,
+                    transformer);
+
             connection.close();
 
             System.out.println("ETL loading test passed.");
