@@ -2,7 +2,8 @@ package crm;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.util.List;
 
 public class MySQLLoader {
 
@@ -12,14 +13,34 @@ public class MySQLLoader {
 
     private static final String PASSWORD = "root12";
 
-    // private static final String PASSWORD = System.getenv("CRM_DB_PASSWORD");
-
-    public Connection connect() throws SQLException {
+    public Connection connect() throws Exception {
 
         Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
 
         System.out.println("Database connection successful.");
 
         return connection;
+    }
+
+    public void loadProducts(Connection connection,
+            List<String[]> products) throws Exception {
+
+        String sql = "INSERT INTO products (product, series, sales_price) " +
+                "VALUES (?, ?, ?)";
+
+        PreparedStatement statement = connection.prepareStatement(sql);
+
+        for (String[] row : products) {
+
+            statement.setString(1, row[0]);
+            statement.setString(2, row[1]);
+            statement.setDouble(3, Double.parseDouble(row[2]));
+
+            statement.executeUpdate();
+        }
+
+        statement.close();
+
+        System.out.println("Products loaded: " + products.size());
     }
 }
