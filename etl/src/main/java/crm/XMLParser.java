@@ -34,28 +34,32 @@ public class XMLParser {
 
             Node node = nodeList.item(i);
 
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
+            if (node.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
 
-                Element element = (Element) node;
+            Element element = (Element) node;
 
-                Map<String, String> row = new HashMap<>();
+            NodeList children = element.getChildNodes();
 
-                NodeList children = element.getChildNodes();
+            Map<String, String> row = new HashMap<>();
 
-                for (int j = 0; j < children.getLength(); j++) {
+            for (int j = 0; j < children.getLength(); j++) {
 
-                    Node child = children.item(j);
+                Node child = children.item(j);
 
-                    if (child.getNodeType() == Node.ELEMENT_NODE) {
+                if (child.getNodeType() == Node.ELEMENT_NODE) {
 
-                        String fieldName = child.getNodeName();
+                    String fieldName = child.getNodeName();
 
-                        String value = child.getTextContent().trim();
+                    String value = child.getTextContent().trim();
 
-                        row.put(fieldName, value);
-                    }
+                    row.put(fieldName, value);
                 }
+            }
 
+            // Only add elements that actually contain fields.
+            if (!row.isEmpty()) {
                 rows.add(row);
             }
         }
