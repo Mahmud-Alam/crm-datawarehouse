@@ -14,8 +14,7 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8");
 
 $query = $_GET["query"] ?? "summary";
-$product = $_GET["product"] ?? "";
-$stage = $_GET["stage"] ?? "";
+
 
 if ($query === "summary") {
 
@@ -28,6 +27,7 @@ if ($query === "summary") {
         FROM sales_pipeline
     ";
 
+
 } elseif ($query === "products") {
 
     $sql = "
@@ -35,13 +35,17 @@ if ($query === "summary") {
             p.product,
             p.series,
             COUNT(sp.opportunity_id) AS opportunities,
-            SUM(sp.close_value) AS total_sales
+            COALESCE(SUM(sp.close_value), 0) AS total_sales
         FROM products p
         LEFT JOIN sales_pipeline sp
             ON p.product_id = sp.product_id
-        GROUP BY p.product_id, p.product, p.series
+        GROUP BY
+            p.product_id,
+            p.product,
+            p.series
         ORDER BY total_sales DESC
     ";
+
 
 } elseif ($query === "agents") {
 
@@ -51,7 +55,7 @@ if ($query === "summary") {
             st.manager,
             st.regional_office,
             COUNT(sp.opportunity_id) AS opportunities,
-            SUM(sp.close_value) AS total_sales
+            COALESCE(SUM(sp.close_value), 0) AS total_sales
         FROM sales_teams st
         LEFT JOIN sales_pipeline sp
             ON st.sales_agent_id = sp.sales_agent_id
@@ -63,6 +67,7 @@ if ($query === "summary") {
         ORDER BY total_sales DESC
     ";
 
+
 } elseif ($query === "accounts") {
 
     $sql = "
@@ -71,7 +76,7 @@ if ($query === "summary") {
             a.sector,
             a.revenue,
             COUNT(sp.opportunity_id) AS opportunities,
-            SUM(sp.close_value) AS total_sales
+            COALESCE(SUM(sp.close_value), 0) AS total_sales
         FROM accounts a
         LEFT JOIN sales_pipeline sp
             ON a.account_id = sp.account_id
@@ -83,11 +88,26 @@ if ($query === "summary") {
         ORDER BY total_sales DESC
     ";
 
+
+} elseif ($query === "stages") {
+
+    $sql = "
+        SELECT
+            deal_stage,
+            COUNT(*) AS opportunities,
+            COALESCE(SUM(close_value), 0) AS total_sales
+        FROM sales_pipeline
+        GROUP BY deal_stage
+        ORDER BY opportunities DESC
+    ";
+
+
 } else {
 
     die("Invalid query.");
 
 }
+
 
 $result = $conn->query($sql);
 
@@ -95,11 +115,13 @@ if (!$result) {
     die("Query failed: " . $conn->error);
 }
 
+
 $data = [];
 
 while ($row = $result->fetch_assoc()) {
     $data[] = $row;
 }
+
 
 header("Content-Type: application/json");
 
