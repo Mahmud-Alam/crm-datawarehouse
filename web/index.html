@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>CRM Data Warehouse Dashboard</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f4f6f8;
+        color: #222;
+      }
+
+      header {
+        background: #1f2937;
+        color: white;
+        padding: 25px;
+        text-align: center;
+      }
+
+      header h1 {
+        margin: 0 0 8px;
+      }
+
+      .container {
+        width: 90%;
+        max-width: 1200px;
+        margin: 30px auto;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+        color: #555;
+        font-size: 16px;
+      }
+
+      .card p {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 0;
+      }
+
+      .section {
+        background: white;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .section h2 {
+        margin-top: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+      }
+
+      th {
+        background: #f0f2f5;
+      }
+
+      tr:hover {
+        background: #f8f9fa;
+      }
+
+      .loading {
+        color: #777;
+      }
+
+      @media (max-width: 900px) {
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          width: 95%;
+        }
+
+        table {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>CRM Data Warehouse Dashboard</h1>
+      <p>Sales and Customer Analytics</p>
+    </header>
+
+    <div class="container">
+      <!-- Summary Cards -->
+      <div class="cards">
+        <div class="card">
+          <h3>Total Opportunities</h3>
+          <p id="totalOpportunities">Loading...</p>
+        </div>
+
+        <div class="card">
+          <h3>Won Opportunities</h3>
+          <p id="wonOpportunities">Loading...</p>
+        </div>
+
+        <div class="card">
+          <h3>Lost Opportunities</h3>
+          <p id="lostOpportunities">Loading...</p>
+        </div>
+
+        <div class="card">
+          <h3>Total Sales</h3>
+          <p id="totalSales">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div class="section">
+        <h2>Sales by Product</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Series</th>
+              <th>Opportunities</th>
+              <th>Total Sales</th>
+            </tr>
+          </thead>
+
+          <tbody id="productsTable">
+            <tr>
+              <td colspan="4" class="loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Sales Agents -->
+      <div class="section">
+        <h2>Sales by Agent</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Sales Agent</th>
+              <th>Manager</th>
+              <th>Regional Office</th>
+              <th>Opportunities</th>
+              <th>Total Sales</th>
+            </tr>
+          </thead>
+
+          <tbody id="agentsTable">
+            <tr>
+              <td colspan="5" class="loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Accounts -->
+      <div class="section">
+        <h2>Sales by Account</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Sector</th>
+              <th>Revenue</th>
+              <th>Opportunities</th>
+              <th>Total Sales</th>
+            </tr>
+          </thead>
+
+          <tbody id="accountsTable">
+            <tr>
+              <td colspan="5" class="loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const apiUrl = "queryEngine.php";
+
+      // Format numbers as currency
+      function formatCurrency(value) {
+        if (value === null || value === undefined) {
+          return "$0.00";
+        }
+
+        return (
+          "$" +
+          Number(value).toLocaleString("en-AU", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        );
+      }
+
+      // Load summary
+      async function loadSummary() {
+        const response = await fetch(apiUrl + "?query=summary");
+
+        const data = await response.json();
+
+        const summary = data[0];
+
+        document.getElementById("totalOpportunities").textContent = Number(
+          summary.total_opportunities,
+        ).toLocaleString();
+
+        document.getElementById("wonOpportunities").textContent = Number(
+          summary.won_opportunities,
+        ).toLocaleString();
+
+        document.getElementById("lostOpportunities").textContent = Number(
+          summary.lost_opportunities,
+        ).toLocaleString();
+
+        document.getElementById("totalSales").textContent = formatCurrency(
+          summary.total_sales,
+        );
+      }
+
+      // Load products
+      async function loadProducts() {
+        const response = await fetch(apiUrl + "?query=products");
+
+        const data = await response.json();
+
+        const table = document.getElementById("productsTable");
+
+        table.innerHTML = "";
+
+        data.forEach(function (row) {
+          table.innerHTML += `
+                    <tr>
+                        <td>${row.product}</td>
+                        <td>${row.series}</td>
+                        <td>${Number(row.opportunities).toLocaleString()}</td>
+                        <td>${formatCurrency(row.total_sales)}</td>
+                    </tr>
+                `;
+        });
+      }
+
+      // Load sales agents
+      async function loadAgents() {
+        const response = await fetch(apiUrl + "?query=agents");
+
+        const data = await response.json();
+
+        const table = document.getElementById("agentsTable");
+
+        table.innerHTML = "";
+
+        data.forEach(function (row) {
+          table.innerHTML += `
+                    <tr>
+                        <td>${row.sales_agent}</td>
+                        <td>${row.manager}</td>
+                        <td>${row.regional_office}</td>
+                        <td>${Number(row.opportunities).toLocaleString()}</td>
+                        <td>${formatCurrency(row.total_sales)}</td>
+                    </tr>
+                `;
+        });
+      }
+
+      // Load accounts
+      async function loadAccounts() {
+        const response = await fetch(apiUrl + "?query=accounts");
+
+        const data = await response.json();
+
+        const table = document.getElementById("accountsTable");
+
+        table.innerHTML = "";
+
+        data.forEach(function (row) {
+          table.innerHTML += `
+                    <tr>
+                        <td>${row.account}</td>
+                        <td>${row.sector}</td>
+                        <td>${formatCurrency(row.revenue)}</td>
+                        <td>${Number(row.opportunities).toLocaleString()}</td>
+                        <td>${formatCurrency(row.total_sales)}</td>
+                    </tr>
+                `;
+        });
+      }
+
+      // Load everything
+      async function loadDashboard() {
+        try {
+          await loadSummary();
+
+          await loadProducts();
+
+          await loadAgents();
+
+          await loadAccounts();
+        } catch (error) {
+          console.error("Dashboard loading error:", error);
+        }
+      }
+
+      loadDashboard();
+    </script>
+  </body>
+</html>
