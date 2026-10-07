@@ -213,6 +213,26 @@
           </tbody>
         </table>
       </div>
+      <!-- Deal Stages -->
+      <div class="section">
+        <h2>Opportunity by Deal Stage</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Deal Stage</th>
+              <th>Opportunities</th>
+              <th>Total Sales</th>
+            </tr>
+          </thead>
+
+          <tbody id="stagesTable">
+            <tr>
+              <td colspan="3" class="loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <script>
@@ -326,6 +346,27 @@
         });
       }
 
+      // Load deal stages
+      async function loadStages() {
+        const response = await fetch(apiUrl + "?query=stages");
+
+        const data = await response.json();
+
+        const table = document.getElementById("stagesTable");
+
+        table.innerHTML = "";
+
+        data.forEach(function (row) {
+          table.innerHTML += `
+            <tr>
+                <td>${row.deal_stage}</td>
+                <td>${Number(row.opportunities).toLocaleString()}</td>
+                <td>${formatCurrency(row.total_sales)}</td>
+            </tr>
+        `;
+        });
+      }
+
       // Load everything
       async function loadDashboard() {
         try {
@@ -336,6 +377,8 @@
           await loadAgents();
 
           await loadAccounts();
+
+          await loadStages();
         } catch (error) {
           console.error("Dashboard loading error:", error);
         }
