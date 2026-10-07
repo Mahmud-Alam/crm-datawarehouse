@@ -14,6 +14,8 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8");
 
 $query = $_GET["query"] ?? "summary";
+$product = $_GET["product"] ?? "";
+$stage = $_GET["stage"] ?? "";
 
 if ($query === "summary") {
 
